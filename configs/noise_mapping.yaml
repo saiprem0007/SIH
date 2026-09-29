@@ -1,0 +1,167 @@
+# noise_mapping.yaml
+# ------------------
+# Maps every dataset's original class label to our 7 unified categories.
+# Categories: impulsive | rotor | vehicle | siren | wind | crowd | misc
+#
+# Used by: scripts/index_folder.py, src/anc/data/leakage.py, manifest builders.
+
+urbansound8k:
+  gun_shot:          impulsive
+  engine_idling:     vehicle
+  jackhammer:        crowd
+  air_conditioner:   wind
+  car_horn:          siren
+  children_playing:  crowd
+  dog_bark:          misc
+  drilling:          crowd
+  siren:             siren
+  street_music:      crowd
+
+esc50:
+  # Animals
+  dog:              misc
+  rooster:          misc
+  pig:              misc
+  cow:              misc
+  frog:             misc
+  cat:              misc
+  hen:              misc
+  insects:          misc
+  sheep:            misc
+  crow:             misc
+  # Natural soundscapes
+  rain:             wind
+  sea_waves:        wind
+  crackling_fire:   misc
+  crickets:         misc
+  chirping_birds:   misc
+  water_drops:      misc
+  wind:             wind
+  pouring_water:    misc
+  toilet_flush:     misc
+  thunderstorm:     impulsive
+  # Human non-speech
+  crying_baby:      misc
+  sneezing:         misc
+  clapping:         crowd
+  breathing:        misc
+  coughing:         misc
+  footsteps:        misc
+  laughing:         crowd
+  brushing_teeth:   misc
+  snoring:          misc
+  drinking_sipping: misc
+  # Interior / domestic
+  door_wood_knock:  misc
+  mouse_click:      misc
+  keyboard_typing:  misc
+  door_wood_creaks: misc
+  can_opening:      misc
+  washing_machine:  vehicle
+  vacuum_cleaner:   vehicle
+  clock_alarm:      siren
+  clock_tick:       misc
+  glass_breaking:   impulsive
+  # Exterior / urban
+  helicopter:       rotor
+  chainsaw:         vehicle
+  siren:            siren
+  car_horn:         siren
+  engine:           vehicle
+  train:            vehicle
+  church_bells:     misc
+  airplane:         rotor
+  fireworks:        impulsive
+  hand_saw:         misc
+
+gunshot_kaggle:
+  # emrahaydemr/gunshot-audio-dataset -- every class is impulsive
+  gunshot:          impulsive
+  gun_shot:         impulsive
+  shot:             impulsive
+  pistol:           impulsive
+  rifle:            impulsive
+  shotgun:          impulsive
+  revolver:         impulsive
+  sniper:           impulsive
+  machine_gun:      impulsive
+  unknown:          impulsive
+
+musan:
+  music:            misc
+  speech:           misc     # do not use as noise; index only for potential babble
+  noise:            misc
+
+demand:
+  DKITCHEN:  crowd
+  DLIVING:   crowd
+  DWASHING:  vehicle
+  NFIELD:    wind
+  NPARK:     wind
+  NRIVER:    wind
+  OOFFICE:   crowd
+  PCAFETER:  crowd
+  PRESTO:    crowd
+  PSTATION:  crowd
+  SPSQUARE:  crowd
+  STRAFFIC:  vehicle
+  TBUS:      vehicle
+  TCAR:      vehicle
+  TMETRO:    vehicle
+
+belize_gunshots:
+  # Zenodo record 4993368
+  gunshot:   impulsive
+  explosion: impulsive
+
+openslr:
+  rir:       misc   # RIR files -- used for augmentation, not as noise clips
+
+freesound_manual:
+  # User-placed CC0 clips; category inherited from --category flag at index time
+  default:   misc
+
+# ---------------------------------------------------------------------------
+# Gun model split control (for gunshot_kaggle leakage prevention)
+# Hold-out gun models ensure no model-level leakage across splits.
+# ---------------------------------------------------------------------------
+gunshot_models:
+  # These gun models are ONLY in the test split (unseen at training time)
+  test_only:
+    - glock_17
+    - ak47
+    - mp5
+  # These gun models are ONLY in the val split
+  val_only:
+    - beretta_92
+    - uzi
+  # All other models go to train
+  train:
+    - default
+
+# ---------------------------------------------------------------------------
+# Freesound keyword hints for manual CC0 downloads (docs only)
+# ---------------------------------------------------------------------------
+freesound_search_hints:
+  impulsive:
+    - "gunshot CC0"
+    - "explosion CC0"
+    - "artillery blast CC0"
+    - "rifle shot outdoor CC0"
+  rotor:
+    - "helicopter flyby CC0"
+    - "drone rotor CC0"
+    - "UH-60 helicopter CC0"
+  vehicle:
+    - "tank engine CC0"
+    - "military truck CC0"
+    - "diesel engine CC0"
+  siren:
+    - "emergency siren CC0"
+    - "military siren CC0"
+  wind:
+    - "wind buffet microphone CC0"
+    - "strong wind CC0"
+  crowd:
+    - "crowd noise CC0"
+    - "crowd cheering CC0"

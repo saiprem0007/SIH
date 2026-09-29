@@ -1,0 +1,262 @@
+project:
+  name: anc-sih
+  version: "0.1.0"
+  description: "Real-time causal noise cancellation for defence wearables (SIH)"
+  seed: 42
+  log_dir: runs/
+  device: auto   # auto | cpu | cuda
+
+audio:
+  sample_rate: 16000
+  frame_len: 320        # 20 ms at 16 kHz
+  hop_len: 160          # 10 ms at 16 kHz
+  n_fft: 512
+  win_len: 320
+  window: hann
+  n_mels: 64
+
+data:
+  root: data/
+  raw_dir: data/raw/
+  processed_dir: data/processed/
+  manifest_dir: data/manifests/
+  testset_dir: data/testset/
+  rir_dir: data/raw/RIRS_NOISES/simulated_rirs
+
+  speech_datasets:
+    - name: librispeech_train_clean_100
+      path: data/raw/LibriSpeech/train-clean-100
+      source: librispeech
+    - name: librispeech_dev_clean
+      path: data/raw/LibriSpeech/dev-clean
+      source: librispeech
+    - name: vctk
+      path: data/raw/VCTK-Corpus
+      source: vctk
+
+  noise_datasets:
+    - name: urbansound8k
+      path: data/raw/UrbanSound8K
+      source: urbansound8k
+    - name: esc50
+      path: data/raw/ESC-50-master
+      source: esc50
+    - name: demand
+      path: data/raw/DEMAND
+      source: demand
+    - name: freesound_manual
+      path: data/raw/freesound_manual
+      source: manual
+    - name: openslr_rir
+      path: data/raw/RIRS_NOISES
+      source: openslr
+
+  splits:
+    train: 0.80
+    val: 0.10
+    test: 0.10
+
+  segment_dur: 4.0          # seconds
+  snr_min: -10.0            # dB
+  snr_max: 10.0             # dB
+
+  snr_tiers:
+    Easy: 10
+    Moderate: 5
+    Hard: 0
+    VeryHard: -5
+    Extreme: -10
+
+  noise_categories:
+    - impulsive
+    - rotor
+    - vehicle
+    - siren
+    - wind
+    - crowd
+    - misc
+
+mixing:
+  impulse_prob: 0.70
+  min_impulse_events: 0
+  max_impulse_events: 4
+  impulse_snr_min: -5.0
+  impulse_snr_max: 15.0
+  stack_prob: 0.30
+  stack_max: 2
+  stack_snr_offset_db: 5.0
+  ref_filter_taps_min: 2
+  ref_filter_taps_max: 8
+  ref_delay_max_ms: 2.0
+  ref_speech_leak_min_db: -30.0
+  ref_speech_leak_max_db: -15.0
+  ref_sensor_noise_db: -50.0
+  ref_degraded_prob: 0.05
+  rir_prob: 0.70
+  noise_rir_prob: 0.30
+  gain_aug_prob: 0.50
+  gain_min_db: -6.0
+  gain_max_db: 6.0
+  clip_prob: 0.05
+  clip_level: 0.95
+  crossfade_ms: 10.0
+  impulse_peak_threshold_factor: 5.0
+
+baselines:
+  nlms:
+    n_taps: 256
+    mu: 0.01
+    delta: 1.0e-6
+  spectral_sub:
+    n_fft: 512
+    hop_len: 160
+    win_len: 320
+    alpha: 2.0
+    beta: 0.01
+    noise_est_frames: 6
+    smoothing: 0.98
+
+# ---------------------------------------------------------------------------
+# Phase 1: Model configurations
+# ---------------------------------------------------------------------------
+model:
+  name: convtasnet        # convtasnet | dcunet | lite_stream
+  variant: base           # base | lite (only for convtasnet / lite_stream)
+
+  # -- Shared input --
+  dual_input: true        # use both primary + reference channels
+  input_fusion: concat    # concat | early_add | separate_encoder
+
+  # -- Conv-TasNet (Model A) --
+  convtasnet:
+    # Encoder / Decoder
+    encoder_kernel: 32    # samples (2 ms at 16 kHz)
+    encoder_stride: 16    # 50% overlap
+    n_filters: 512        # number of encoder channels (base) / 128 (lite)
+    # TCN Separator
+    n_stacks: 2           # number of TCN stacks (base=2, lite=1)
+    n_blocks: 6           # dilated conv blocks per stack
+    tcn_channels: 256     # internal channel width (base=256, lite=64)
+    bottleneck_channels: 128  # bottleneck projection (base=128, lite=32)
+    kernel_size: 3        # depthwise conv kernel
+    mask_activation: sigmoid  # sigmoid | relu
+
+    # Lite variant overrides (set variant: lite to activate)
+    lite:
+      n_filters: 128
+      n_stacks: 1
+      n_blocks: 6
+      tcn_channels: 64
+      bottleneck_channels: 32
+
+  # -- DCU-Net (Model B) --
+  dcunet:
+    n_fft: 512
+    hop_len: 160
+    win_len: 320
+    in_channels: 2        # primary + reference (complex, so 4 real channels)
+    encoder_channels: [32, 64, 128, 256]
+    kernel_t: 3           # time-axis kernel
+    kernel_f: 3           # freq-axis kernel
+    use_gru: true         # GRU in the bottleneck
+    gru_hidden: 64
+
+  # -- Lite Conv+GRU (Model C) --
+  lite_stream:
+    encoder_kernel: 32
+    encoder_stride: 16
+    n_filters: 64
+    gru_hidden: 64
+    gru_layers: 1
+    fc_channels: 64
+
+# ---------------------------------------------------------------------------
+# Phase 1: Loss configuration
+# ---------------------------------------------------------------------------
+loss:
+  alpha: 0.5    # SI-SNR weight
+  beta: 0.3     # multi-resolution STFT weight
+  gamma: 0.2    # L1 waveform weight
+
+  stft_resolutions:       # (n_fft, hop_len, win_len) triples
+    - [512, 128, 512]
+    - [1024, 256, 1024]
+    - [256, 64, 256]
+
+# ---------------------------------------------------------------------------
+# Phase 1: Training configuration
+# ---------------------------------------------------------------------------
+train:
+  epochs: 100
+  batch_size: 8
+  virtual_epoch_size: 5000   # samples per epoch (on-the-fly dataset)
+  val_samples: 500           # samples from fixed test set for validation
+  num_workers: 0             # 0 = main process (Windows safe)
+  pin_memory: false
+
+  optimizer:
+    name: adamw
+    lr: 3.0e-4
+    weight_decay: 1.0e-4
+    betas: [0.9, 0.999]
+
+  scheduler:
+    name: cosine             # cosine | plateau
+    warmup_epochs: 5
+    min_lr: 1.0e-6
+    patience: 10             # for plateau scheduler
+    factor: 0.5
+
+  grad_clip: 5.0
+  use_amp: false             # mixed precision (requires CUDA)
+
+  checkpoint_dir: runs/checkpoints/
+  log_dir: runs/tensorboard/
+
+  # Early stopping
+  early_stop_metric: si_sdr  # si_sdr | stoi
+  early_stop_patience: 20
+  early_stop_min_delta: 0.1
+
+  # Logging
+  log_every_n_steps: 50
+  validate_every_n_epochs: 2
+  save_audio_every_n_epochs: 5
+  n_audio_samples: 4        # number of audio examples to log
+
+  # Curriculum learning
+  curriculum:
+    enabled: true
+    phases:
+      - epoch_end: 10
+        snr_min: 0.0
+        snr_max: 10.0
+        impulse_prob: 0.3
+      - epoch_end: 30
+        snr_min: -5.0
+        snr_max: 10.0
+        impulse_prob: 0.5
+      - epoch_end: 999
+        snr_min: -10.0
+        snr_max: 10.0
+        impulse_prob: 0.7
+
+  # Debug / quick-run mode
+  debug:
+    enabled: false
+    n_train: 64
+    n_val: 16
+    epochs: 3
+    batch_size: 4
+
+eval:
+  output_dir: eval_results/
+  rtf_repeats: 5
+
+demo:
+  enabled: false
+  n_speech: 50
+  n_noise: 50
+  test_samples_per_tier: 20
+  test_samples_per_category: 10
+  segment_dur: 4.0

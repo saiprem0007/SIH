@@ -1,0 +1,62 @@
+# ============================================================
+# ANC-SIH .gitignore
+# ============================================================
+
+# ------ Data tree -----------------------------------------------
+# Ignore all raw / processed / generated data.
+# NOTE: data/manifests/*.csv seed manifests ARE committed if small
+#       (< 1 MB). Do NOT add '!data/manifests/*.csv' here unless
+#       you want to un-ignore them explicitly.
+data/raw/
+data/processed/
+data/testset/
+data/manifests/
+
+# ------ Run artefacts -------------------------------------------
+runs/
+eval_results/
+
+# ------ Python cache / bytecode ---------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# ------ Virtual environments ------------------------------------
+.venv/
+venv/
+env/
+.env
+
+# ------ Build / packaging ---------------------------------------
+*.egg-info/
+dist/
+build/
+*.egg
+MANIFEST
+
+# ------ Test / type-check caches --------------------------------
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.lcov
+
+# ------ Model weights & compiled artefacts ----------------------
+*.onnx
+*.trt
+*.pt
+*.pth
+*.bin
+
+# ------ Experiment tracking ------------------------------------
+wandb/
+
+# ------ Editor / OS artefacts -----------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

@@ -1,0 +1,78 @@
+# Synthetic defence noise generator parameters.
+# All values match the module-level constants in generators.py.
+# Override any value here; load with anc.utils.config.load_config.
+
+blast:
+  rise_ms_min: 0.5
+  rise_ms_max: 2.0
+  decay_min: 20.0
+  decay_max: 80.0
+  thump_f_hz: 60.0
+  thump_db: -6.0
+  onset_max_frac: 0.25
+  n_echoes_max: 3
+  echo_delay_max_ms: 80.0
+  echo_decay_db: -12.0
+
+gunshot:
+  rise_ms: 0.3
+  tail_decay_min: 5.0
+  tail_decay_max: 30.0
+  hf_loss_min_hz: 1000.0
+  hf_loss_max_hz: 6000.0
+  echo_count_max: 5
+
+artillery:
+  dominant_f_hz: 40.0
+  decay_min: 2.0
+  decay_max: 8.0
+  echo_count: 6
+  echo_spread_max_ms: 300.0
+  lp_cutoff_hz: 300.0
+
+rotor:
+  f0_min_hz: 15.0
+  f0_max_hz: 30.0
+  n_harmonics: 12
+  am_rate_min: 0.3
+  am_rate_max: 1.5
+  am_depth_min: 0.05
+  am_depth_max: 0.20
+  hiss_db: -15.0
+
+siren:
+  f_lo_hz: 300.0
+  f_hi_hz: 3000.0
+  sweep_period_min: 0.5
+  sweep_period_max: 2.0
+  n_harmonics: 4
+  am_depth: 0.10
+
+engine:
+  rpm_min: 600
+  rpm_max: 3000
+  n_harmonics: 8
+  broadband_db: -10.0
+  rpm_sweep_prob: 0.40
+
+tracked_vehicle:
+  rumble_f_lo_hz: 20.0
+  rumble_f_hi_hz: 200.0
+  clank_rate_min: 2.0
+  clank_rate_max: 15.0
+  clank_dur_ms_min: 2.0
+  clank_dur_ms_max: 10.0
+  clank_db_min: -6.0
+  clank_db_max: 6.0
+
+wind_buffet:
+  lp_cutoff_hz: 400.0
+  gust_rate_min: 0.2
+  gust_rate_max: 2.0
+  gust_depth_min: 0.3
+  gust_depth_max: 0.8
+
+babble:
+  n_speakers_min: 4
+  n_speakers_max: 8
+  pitch_shift_semitones_max: 3.0

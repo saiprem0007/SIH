@@ -1,0 +1,67 @@
+# ANC-SIH Model Registry
+# -----------------------
+# Each entry is one deployable model variant.
+# "rtf" is filled by scripts/benchmark_rtf.py — never type it by hand.
+# "checkpoint" is relative to the repo root.
+
+models:
+
+  - id: convtasnet_base
+    display_name: "ConvTasNet Base (dual-input)"
+    architecture: convtasnet
+    variant: base
+    checkpoint: runs/checkpoints/convtasnet/best.pt
+    params_M: 1.51
+    requires_reference: true
+    description: >
+      Causal dual-input Conv-TasNet (2 stacks × 6 blocks, 256 channels).
+      Handles primary + reference mic.  Target platform: Jetson Orin NX (FP16).
+    rtf: null   # filled by benchmark_rtf.py
+
+  - id: convtasnet_lite
+    display_name: "ConvTasNet Lite (dual-input)"
+    architecture: convtasnet
+    variant: lite
+    checkpoint: runs/checkpoints/convtasnet_lite/best.pt
+    params_M: 0.18
+    requires_reference: true
+    description: >
+      Smaller Conv-TasNet (1 stack × 6 blocks, 64 channels).
+      Suitable for Cortex-A / lower-power SoC.  INT8-quantisable.
+    rtf: null
+
+  - id: lite_stream
+    display_name: "LiteStream (Conv+GRU, MCU fallback)"
+    architecture: lite_stream
+    variant: base
+    checkpoint: runs/checkpoints/lite_stream/best.pt
+    params_M: 0.05
+    requires_reference: true
+    description: >
+      Tiny causal Conv+GRU model under 100 k parameters.
+      Target: Cortex-M / DSP.  INT8.  Degrades gracefully if reference unavailable.
+    rtf: null
+
+  - id: convtasnet_primary_only
+    display_name: "ConvTasNet (primary only, no reference)"
+    architecture: convtasnet
+    variant: base
+    checkpoint: runs/checkpoints/convtasnet_primary_only/best.pt
+    params_M: 1.51
+    requires_reference: false
+    description: >
+      Same architecture as convtasnet_base but trained without reference channel
+      (early_add fusion with zeroed reference).  Used when ref_mode=none.
+    rtf: null
+
+  - id: dcunet
+    display_name: "DCUNet (Complex U-Net)"
+    architecture: dcunet
+    variant: base
+    checkpoint: runs/checkpoints/dcunet/best.pt
+    params_M: null   # filled after training
+    requires_reference: true
+    description: >
+      Causal Deep Complex U-Net on STFT.  Higher quality on stationary noise;
+      higher latency due to STFT frame size.
+    rtf: null

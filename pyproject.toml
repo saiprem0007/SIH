@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anc-sih"
+version = "0.1.0"
+description = "Real-time causal noise cancellation for defence wearables (SIH)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.1.0",
+    "torchaudio>=2.1.0",
+    "numpy>=1.24.0",
+    "scipy>=1.11.0",
+    "soundfile>=0.12.1",
+    "librosa>=0.10.1",
+    "pandas>=2.0.0",
+    "PyYAML>=6.0",
+    "tqdm>=4.65.0",
+    "pystoi>=0.3.3",
+    "pesq>=0.0.4",
+    "tensorboard>=2.14.0",
+    "matplotlib>=3.7.0",
+    "onnx>=1.14.0",
+    "onnxruntime>=1.16.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov",
+    "mypy",
+    "ruff",
+]
+
+[project.scripts]
+download-data   = "anc.scripts.download_data:main"
+make-testset    = "anc.scripts.make_testset:main"
+evaluate        = "anc.scripts.evaluate:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts   = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+strict = false
